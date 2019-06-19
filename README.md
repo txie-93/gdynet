@@ -4,7 +4,7 @@ This software package implements the Graph Dynamical Networks (GDyNet) that auto
 
 The following paper describes the details of the the method.
 
-[Graph Dynamical Networks for Unsupervised Learning of Atomic Scale Dynamics in Materials](https://arxiv.org/abs/1902.06836)
+[Graph Dynamical Networks for Unsupervised Learning of Atomic Scale Dynamics in Materials](https://doi.org/10.1038/s41467-019-10663-6)
 
 ![](images/illustrative.png)
 
@@ -24,11 +24,20 @@ The following paper describes the details of the the method.
 Please cite the following work if you want to use GDyNet.
 
 ```
-@article{xie2019graph,
-  title={Graph Dynamical Networks for Unsupervised Learning of Atomic Scale Dynamics in Materials},
-  author={Xie, Tian and France-Lanord, Arthur and Wang, Yanming and Shao-Horn, Yang and Grossman, Jeffrey C},
-  journal={arXiv preprint arXiv:1902.06836},
-  year={2019}
+@article{xie_graph_2019,
+	title = {Graph dynamical networks for unsupervised learning of atomic scale dynamics in materials},
+	volume = {10},
+	issn = {2041-1723},
+	url = {http://www.nature.com/articles/s41467-019-10663-6},
+	doi = {10.1038/s41467-019-10663-6},
+	language = {en},
+	number = {1},
+	urldate = {2019-06-19},
+	journal = {Nature Communications},
+	author = {Xie, Tian and France-Lanord, Arthur and Wang, Yanming and Shao-Horn, Yang and Grossman, Jeffrey C.},
+	month = dec,
+	year = {2019},
+	pages = {2667}
 }
 ```
 

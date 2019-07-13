@@ -10,5 +10,5 @@ It contains the MD trajectories of three material systems, which are in a format
 - Solid-liquid interface of a Si-Au binary system.
 - Polymer electrolyte of Li-ion battery made of PEO/LiTFSI. 
 
-It also contains the preprocessed data of the toy system, which have been split into three parts for training, validation, and testing.
+It also contains the preprocessed data of the toy system, which have been split into three parts for training, validation, and testing. These files can be directly inputted to `main.py`.
 

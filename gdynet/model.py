@@ -68,6 +68,9 @@ def _pooling(inps):
     atom_fea: (B, N, atom_fea_len)
     target_index: (B, N0)
 
+    N: number of atoms in each batch.
+    N0: number of taget atoms in each batch.
+
     Returns
     -------
     crys_fea: (B, N0, atom_fea_len)

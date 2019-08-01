@@ -88,7 +88,7 @@ First, you need to prepare your MD trajectories into a `traj.npz` file using [`n
 - `traj_coords`: `np.float` arrays with shape `(F, N, 3)`, stores the cartesian coordinates of each atom in each frame.
 - `lattices`: `np.float` arrays with shape `(F, 3, 3)`, stores the lattice matrix of the simulation box in each frame. In the lattice matrix, each row represents a lattice vector.
 - `atom_types`: `np.int` arrays with shape `(N,)`, stores the atomic number of each atom in the MD simulation.
-- `target_index`: `np.int` arrays with shape `(n,)`, stores the indexes of the target atoms. (`n <= N`)
+- `target_index`: `np.int` arrays with shape `(n,)`, stores the indexes of the target atoms (`n <= N`). Note that here we assume the target atoms are just single atoms (like Li-ions) and each index repesents one target atom. We will support cases where target atoms are molecules (like water molecules) in the futhre.
 
 Then, you can use the `preprocess.py` to preprocess the `traj.npz`. It will create a `graph.npz` file that contains the dynamically constructed graphs.
 

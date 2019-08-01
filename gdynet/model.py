@@ -69,7 +69,11 @@ def _pooling(inps):
     target_index: (B, N0)
 
     N: number of atoms in each batch.
-    N0: number of taget atoms in each batch.
+    N0: number of target atoms in each batch.
+
+    Note here we assume the target atoms are single atoms (e.g. Li-ions).
+    TODO: implement a pooling function for cases where the target atoms are
+    molecules (e.g. H2O).
 
     Returns
     -------

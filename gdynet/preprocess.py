@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 
+import functools
+from multiprocessing import Pool
 import numpy as np
 from .utils import PeriodicCKDTree, distance_pbc
 from tqdm import tqdm
-from pymatgen.core.structure import IStructure
+from pymatgen.core.structure import Structure
 
 
 class Preprocess(object):
@@ -142,33 +144,36 @@ class Preprocess(object):
                     'target_index': target_index,
                     'nbr_lists': nbr_lists}
         elif self.backend == 'direct':
-            nbr_lists, nbr_dists = [], []
-            for coord, lattice in tqdm(zip(traj_coords, lattices),
-                                       total=len(traj_coords),
-                                       disable=not self.verbose):
-                crystal = IStructure(lattice=lattice,
-                                     species=atom_types,
-                                     coords=coord,
-                                     coords_are_cartesian=True)
-                all_nbrs = crystal.get_all_neighbors(r=self.radius,
-                                                     include_index=True)
-                all_nbrs = [sorted(nbrs, key=lambda x: x[1])
-                            for nbrs in all_nbrs]
-                nbr_list, nbr_dist = [], []
-                for nbr in all_nbrs:
-                    assert len(nbr) >= self.n_nbrs, 'not find enough neighbors'
-                    nbr_list.append(list(map(lambda x: x[2],
-                                             nbr[:self.n_nbrs])))
-                    nbr_dist.append(list(map(lambda x: x[1],
-                                             nbr[:self.n_nbrs])))
-                nbr_lists.append(np.array(nbr_list, dtype='int32'))
-                nbr_dists.append(np.array(nbr_dist, dtype='float32'))
-            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
+            stcs = [Structure(lattice=lattices[i],
+                              species=atom_types,
+                              coords=traj_coords[i],
+                              coords_are_cartesian=True) for i in range(len(traj_coords))]
+            a, b, c = [np.ceil(2*self.radius/d).astype('int')
+                       for d in stcs[0].lattice.abc]
+            if [a, b, c] != [1, 1, 1]:
+                _ = [stc.make_supercell(
+                    [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc]) for stc in stcs]
+            # with Pool(n_core) as p:
+            nbr_info = map(functools.partial(self._get_sort_distance, 
+                                             target_index=target_index),
+                           tqdm(stcs, disable=not self.verbose))
+            nbr_lists = [s[0] for s in nbr_info]
+            nbr_dists = [s[1] for s in nbr_info]
+            if not np.all((nbr_dists < self.radius) & (nbr_dists > 0)):
+                raise('not find enough neighbors')
             return {'traj_coords': traj_coords,
                     'atom_types': atom_types,
                     'target_index': target_index,
                     'nbr_lists': nbr_lists,
                     'nbr_dists': nbr_dists}
+
+    def _get_sort_distance(self, stc, target_index):
+        dm = stc.distance_matrix[target_index]
+        idx = [np.where((d<self.radius) & (d>0)) for d in dm]
+        n_nbrs_dists = np.stack([d[idx][:self.n_nbrs] for d, idx in zip(dm, idx)])
+        nbr_lists = np.argsort(n_nbrs_dists, axis=1)
+        nbr_dists = np.sort(n_nbrs_dists, axis=1)
+        return nbr_lists, nbr_dists
 
     def preprocess(self):
         if self.verbose:

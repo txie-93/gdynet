@@ -147,18 +147,22 @@ class Preprocess(object):
             stcs = [Structure(lattice=lattices[i],
                               species=atom_types,
                               coords=traj_coords[i],
-                              coords_are_cartesian=True) for i in range(len(traj_coords))]
+                              coords_are_cartesian=True)
+                    for i in tqdm(range(len(traj_coords)),
+                                  desc='Step 1/3', disable=not self.verbose)]
             a, b, c = [np.ceil(2*self.radius/d).astype('int')
                        for d in stcs[0].lattice.abc]
             if [a, b, c] != [1, 1, 1]:
                 _ = [stc.make_supercell(
-                    [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc]) for stc in stcs]
+                    [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc])
+                    for stc in tqdm(stcs, desc='Step 2/3', disable=not self.verbose)]
             # with Pool(n_core) as p:
-            nbr_info = map(functools.partial(self._get_sort_distance, 
-                                             target_index=target_index),
-                           tqdm(stcs, disable=not self.verbose))
+            nbr_info = list(map(functools.partial(self._get_sort_distance,
+                                                  target_index=target_index),
+                                tqdm(stcs, desc='Step 3/3', disable=not self.verbose)))
             nbr_lists = [s[0] for s in nbr_info]
             nbr_dists = [s[1] for s in nbr_info]
+            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
             if not np.all((nbr_dists < self.radius) & (nbr_dists > 0)):
                 raise('not find enough neighbors')
             return {'traj_coords': traj_coords,
@@ -169,8 +173,9 @@ class Preprocess(object):
 
     def _get_sort_distance(self, stc, target_index):
         dm = stc.distance_matrix[target_index]
-        idx = [np.where((d<self.radius) & (d>0)) for d in dm]
-        n_nbrs_dists = np.stack([d[idx][:self.n_nbrs] for d, idx in zip(dm, idx)])
+        idx = [np.where((d < self.radius) & (d > 0)) for d in dm]
+        n_nbrs_dists = np.stack([d[idx][:self.n_nbrs]
+                                 for d, idx in zip(dm, idx)])
         nbr_lists = np.argsort(n_nbrs_dists, axis=1)
         nbr_dists = np.sort(n_nbrs_dists, axis=1)
         return nbr_lists, nbr_dists

@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import numpy as np
 from .utils import PeriodicCKDTree, distance_pbc
 from tqdm import tqdm
-from pymatgen.core.structure import Structure
+from pymatgen.core.structure import IStructure, Structure
 
 
 class Preprocess(object):

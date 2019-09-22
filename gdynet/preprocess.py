@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-import functools
-from multiprocessing import Pool
 import numpy as np
 from .utils import PeriodicCKDTree, distance_pbc
 from tqdm import tqdm
@@ -74,8 +72,8 @@ class Preprocess(object):
         self.output_file = output_file
         self.n_nbrs = n_nbrs
         self.radius = radius
-        if backend not in ['kdtree', 'direct']:
-            raise ValueError('backend should be either "kdtree" or "direct", '
+        if backend not in ['kdtree', 'direct', 'ndirect']:
+            raise ValueError('backend should be "kdtree", "ndirect" or "direct", '
                              'but got {}'.format(backend))
         self.backend = backend
         self.verbose = verbose
@@ -144,25 +142,54 @@ class Preprocess(object):
                     'target_index': target_index,
                     'nbr_lists': nbr_lists}
         elif self.backend == 'direct':
+            nbr_lists, nbr_dists = [], []
+            for coord, lattice in tqdm(zip(traj_coords, lattices),
+                                       total=len(traj_coords),
+                                       disable=not self.verbose):
+                crystal = IStructure(lattice=lattice,
+                                     species=atom_types,
+                                     coords=coord,
+                                     coords_are_cartesian=True)
+                all_nbrs = crystal.get_all_neighbors(r=self.radius,
+                                                     include_index=True)
+                all_nbrs = [sorted(nbrs, key=lambda x: x[1])
+                            for nbrs in all_nbrs]
+                nbr_list, nbr_dist = [], []
+                for nbr in all_nbrs:
+                    assert len(nbr) >= self.n_nbrs, 'not find enough neighbors'
+                    nbr_list.append(list(map(lambda x: x[2],
+                                             nbr[:self.n_nbrs])))
+                    nbr_dist.append(list(map(lambda x: x[1],
+                                             nbr[:self.n_nbrs])))
+                nbr_lists.append(np.array(nbr_list, dtype='int32'))
+                nbr_dists.append(np.array(nbr_dist, dtype='float32'))
+            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
+            return {'traj_coords': traj_coords,
+                    'atom_types': atom_types,
+                    'target_index': target_index,
+                    'nbr_lists': nbr_lists,
+                    'nbr_dists': nbr_dists}
+        elif self.backend == 'ndirect':
             stcs = [Structure(lattice=lattices[i],
                               species=atom_types,
                               coords=traj_coords[i],
                               coords_are_cartesian=True)
                     for i in tqdm(range(len(traj_coords)),
-                                  desc='Step 1/3', disable=not self.verbose)]
+                                  desc='Step 1/2', disable=not self.verbose)]
             a, b, c = [np.ceil(2*self.radius/d).astype('int')
                        for d in stcs[0].lattice.abc]
             if [a, b, c] != [1, 1, 1]:
                 _ = [stc.make_supercell(
                     [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc])
-                    for stc in tqdm(stcs, desc='Step 2/3', disable=not self.verbose)]
-            # with Pool(n_core) as p:
-            nbr_info = list(map(functools.partial(self._get_sort_distance,
-                                                  target_index=target_index),
-                                tqdm(stcs, desc='Step 3/3', disable=not self.verbose)))
-            nbr_lists = [s[0] for s in nbr_info]
-            nbr_dists = [s[1] for s in nbr_info]
-            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
+                    for stc in tqdm(stcs, desc='Step 2/2', disable=not self.verbose)]
+            nbr_lists = np.array([stc.distance_matrix.argsort()[
+                                 :, 1:1+self.n_nbrs] for stc in tqdm(
+                                 stcs, desc='Step 3/4', disable=not self.verbose)])
+            nbr_dists = np.array([np.sort(stc.distance_matrix)[
+                                 :, 1:1+self.n_nbrs] for stc in tqdm(
+                                 stcs, desc='Step 4/4', disable=not self.verbose)])
+            nbr_lists, nbr_dists = np.stack(
+                nbr_lists, dtype='int32'), np.stack(nbr_dists, dtype='float32')
             if not np.all((nbr_dists < self.radius) & (nbr_dists > 0)):
                 raise('not find enough neighbors')
             return {'traj_coords': traj_coords,
@@ -170,15 +197,6 @@ class Preprocess(object):
                     'target_index': target_index,
                     'nbr_lists': nbr_lists,
                     'nbr_dists': nbr_dists}
-
-    def _get_sort_distance(self, stc, target_index):
-        dm = stc.distance_matrix[target_index]
-        idx = [np.where((d < self.radius) & (d > 0)) for d in dm]
-        n_nbrs_dists = np.stack([d[idx][:self.n_nbrs]
-                                 for d, idx in zip(dm, idx)])
-        nbr_lists = np.argsort(n_nbrs_dists, axis=1)
-        nbr_dists = np.sort(n_nbrs_dists, axis=1)
-        return nbr_lists, nbr_dists
 
     def preprocess(self):
         if self.verbose:

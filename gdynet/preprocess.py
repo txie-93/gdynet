@@ -175,21 +175,20 @@ class Preprocess(object):
                               coords=traj_coords[i],
                               coords_are_cartesian=True)
                     for i in tqdm(range(len(traj_coords)),
-                                  desc='Step 1/2', disable=not self.verbose)]
+                                  desc='Generating structure...', disable=not self.verbose)]
             a, b, c = [np.ceil(2*self.radius/d).astype('int')
                        for d in stcs[0].lattice.abc]
             if [a, b, c] != [1, 1, 1]:
                 _ = [stc.make_supercell(
                     [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc])
-                    for stc in tqdm(stcs, desc='Step 2/2', disable=not self.verbose)]
+                    for stc in tqdm(stcs, desc='Building supercell...', disable=not self.verbose)]
             nbr_lists = np.array([stc.distance_matrix.argsort()[
                                  :, 1:1+self.n_nbrs] for stc in tqdm(
-                                 stcs, desc='Step 3/4', disable=not self.verbose)])
+                stcs, desc='Generating neighbor index...', disable=not self.verbose)], dtype='int32')
             nbr_dists = np.array([np.sort(stc.distance_matrix)[
                                  :, 1:1+self.n_nbrs] for stc in tqdm(
-                                 stcs, desc='Step 4/4', disable=not self.verbose)])
-            nbr_lists, nbr_dists = np.stack(
-                nbr_lists, dtype='int32'), np.stack(nbr_dists, dtype='float32')
+                stcs, desc='Generating neighbor distance...', disable=not self.verbose)], dtype='float32')
+            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
             if not np.all((nbr_dists < self.radius) & (nbr_dists > 0)):
                 raise('not find enough neighbors')
             return {'traj_coords': traj_coords,

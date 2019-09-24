@@ -56,10 +56,12 @@ prep_parser.add_argument('--n-nbrs', type=int, default=20,
 prep_parser.add_argument('--radius', type=float, default=7.,
                          help='search radius for finding nearest neighbors '
                          '(default: 7.)')
-prep_parser.add_argument('--backend', choices=['kdtree', 'direct'],
-                         default='kdtree', help='either "kdtree" or "direct", '
+prep_parser.add_argument('--backend', choices=['kdtree', 'direct', 'ndirect'],
+                         default='kdtree', help='"kdtree", "direct" or "ndirect" available, '
                          'the backend used to search for nearest neighbors. '
                          '"kdtree" has linear scaling but only works for '
                          'orthogonal lattices. "direct" works for trigonal '
-                         'lattices but has quadratic scaling. '
+                         'lattices but has quadratic scaling. "ndirect" is '
+                         'an enhanced method for "direct" which could '
+                         'accelarate the process ofdealing with large lattices.'
                          '(default: "kdtree")')

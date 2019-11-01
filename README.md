@@ -53,7 +53,7 @@ If you are new to Python, the easiest way of installing the prerequisites is via
 
 ```bash
 conda upgrade conda
-conda create -n gdynet python=3.6 tensorflow pymatgen tqdm -c anaconda -c matsci
+conda create -n gdynet python=3.6 tensorflow pymatgen tqdm -c anaconda -c conda-forge
 ```
 
 This creates a conda environment for running GDyNet. Before using GDyNet, activate the environment by:

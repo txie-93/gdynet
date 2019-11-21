@@ -125,6 +125,10 @@ There are several common issues that may prevent the training from success.
 
 After the training, you can visualize the dynamical model using the functions in the [`postprocess`](gdynet/postprocess.py) module. We provide a [jupyter notebook](notebooks/visualization.ipynb) to demonstrate how to visualize the results for the toy system from the [paper](https://arxiv.org/abs/1902.06836).
 
+## Data
+
+To reproduce our results or use the data from our paper, see these [instructions](data/).
+
 ## Authors
 
 This software was primarily written by [Tian Xie](http://ww.txie.me) who was advised by [Prof. Jeffrey Grossman](https://dmse.mit.edu/faculty/profile/grossman).

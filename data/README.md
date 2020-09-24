@@ -2,7 +2,7 @@
 
 The MD trajectory data used in the paper can be downloaded from the following repository.
 
-https://archive.materialscloud.org/2019.0017
+https://doi.org/10.24435/materialscloud:2019.0017/v1
 
 It contains the MD trajectories of three material systems, which are in a format that can be directly inputted to `preprocess.py`.
 

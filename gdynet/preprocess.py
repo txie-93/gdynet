@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import numpy as np
 from .utils import PeriodicCKDTree, distance_pbc
 from tqdm import tqdm
-from pymatgen.core.structure import IStructure
+from pymatgen.core.structure import IStructure, Structure
 
 
 class Preprocess(object):
@@ -72,8 +72,8 @@ class Preprocess(object):
         self.output_file = output_file
         self.n_nbrs = n_nbrs
         self.radius = radius
-        if backend not in ['kdtree', 'direct']:
-            raise ValueError('backend should be either "kdtree" or "direct", '
+        if backend not in ['kdtree', 'direct', 'ndirect']:
+            raise ValueError('backend should be "kdtree", "ndirect" or "direct", '
                              'but got {}'.format(backend))
         self.backend = backend
         self.verbose = verbose
@@ -164,6 +164,33 @@ class Preprocess(object):
                 nbr_lists.append(np.array(nbr_list, dtype='int32'))
                 nbr_dists.append(np.array(nbr_dist, dtype='float32'))
             nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
+            return {'traj_coords': traj_coords,
+                    'atom_types': atom_types,
+                    'target_index': target_index,
+                    'nbr_lists': nbr_lists,
+                    'nbr_dists': nbr_dists}
+        elif self.backend == 'ndirect':
+            stcs = [Structure(lattice=lattices[i],
+                              species=atom_types,
+                              coords=traj_coords[i],
+                              coords_are_cartesian=True)
+                    for i in tqdm(range(len(traj_coords)),
+                                  desc='Generating structure...', disable=not self.verbose)]
+            a, b, c = [np.ceil(2*self.radius/d).astype('int')
+                       for d in stcs[0].lattice.abc]
+            if [a, b, c] != [1, 1, 1]:
+                _ = [stc.make_supercell(
+                    [np.ceil(2*self.radius/d).astype('int') for d in stc.lattice.abc])
+                    for stc in tqdm(stcs, desc='Building supercell...', disable=not self.verbose)]
+            nbr_lists = np.array([stc.distance_matrix.argsort()[
+                                 :, 1:1+self.n_nbrs] for stc in tqdm(
+                stcs, desc='Generating neighbor index...', disable=not self.verbose)], dtype='int32')
+            nbr_dists = np.array([np.sort(stc.distance_matrix)[
+                                 :, 1:1+self.n_nbrs] for stc in tqdm(
+                stcs, desc='Generating neighbor distance...', disable=not self.verbose)], dtype='float32')
+            nbr_lists, nbr_dists = np.stack(nbr_lists), np.stack(nbr_dists)
+            if not np.all((nbr_dists < self.radius) & (nbr_dists > 0)):
+                raise('not find enough neighbors')
             return {'traj_coords': traj_coords,
                     'atom_types': atom_types,
                     'target_index': target_index,

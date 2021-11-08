@@ -46,7 +46,7 @@ Please cite the following work if you want to use GDyNet.
 
 This package requires:
 
-- [TensorFlow](https://www.tensorflow.org)
+- [TensorFlow (v1.5 - v1.10)](https://www.tensorflow.org)
 - [pymatgen](http://pymatgen.org)
 - [tqdm](https://tqdm.github.io)
 

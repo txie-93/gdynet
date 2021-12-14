@@ -50,6 +50,8 @@ This package requires:
 - [pymatgen](http://pymatgen.org)
 - [tqdm](https://tqdm.github.io)
 
+Note: current codebase can only work on TensorFlow v1. [15garzab](https://github.com/15garzab) migrated it to TensorFlow v2 in [this branch](https://github.com/15garzab/gdynet/tree/migrate) for those who might be interested.
+
 If you are new to Python, the easiest way of installing the prerequisites is via [conda](https://conda.io/docs/index.html). After installing [conda](http://conda.pydata.org/), run the following command to create a new [environment](https://conda.io/docs/user-guide/tasks/manage-environments.html) named `gdynet` and install all prerequisites:
 
 ```bash

@@ -99,7 +99,7 @@ Then, you can use the `preprocess.py` to preprocess the `traj.npz`. It will crea
 python preprocess.py traj.npz graph.npz
 ```
 
-Note that the graph construction is slow especially for large MD trajectories. There two different graph construction algorithms implemented. The default `--backend kdtree` has a linear scaling but only works for orthogonal simulation box. For non-orthogonal simulation, use flag `--backend direct` which has a quadratic scaling. You can also take advantage of the multiprocessing with flag `--n-workers`. For other flags, checkout the help information with `python preprocess.py -h`.
+Note that the graph construction is slow especially for large MD trajectories. There two different graph construction algorithms implemented. The default `--backend kdtree` has a linear scaling but only works for orthogonal simulation box. For non-orthogonal simulation, use flag `--backend direct` or `--backend ndirect` which has a quadratic scaling (for the two choices, the latter is specially efficient for large cells, while the former could be quick for small ones). You can also take advantage of the multiprocessing with flag `--n-workers`. For other flags, checkout the help information with `python preprocess.py -h`.
 
 ### Training the model
 
